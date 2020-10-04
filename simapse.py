@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 '''
 SIMAPSE - simulation maps for ecological niche modelling
 Version 1.01 beta
