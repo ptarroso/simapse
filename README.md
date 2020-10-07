@@ -38,21 +38,19 @@ The first column has the observational data and might be:
 
 The raster data follows the plain text ASCII grid format. It consists of a 6 line header and a matrix-like disposition of pixel values.
 
-            |
-------------|----
-ncols       |4
-nrows       |5
-xllcorner   |-8.0
-yllcorner   |34.0
-cellsize    |1000
-NODATA_value|-9999
-
-1 |2 |3 |4
-5 |6 |7 |8
-9 |10|11|12
-13|14|15|-9999
-16|17|18|-9999
-
+```
+ncols        4
+nrows        5
+xllcorner    -8.0
+yllcorner    34.0
+cellsize     1000
+NODATA_value -9999
+1 2 3 4
+5 6 7 8
+9 10 11 12
+13 14 15 -9999
+16 17 18 -9999
+```
 
 ## Citation
 
