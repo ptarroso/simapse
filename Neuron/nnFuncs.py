@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00 beta
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 
@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from os import curdir, path
+from operator import itemgetter
 
 #from matplotlib.backends.backend_agg import FigureCanvasAgg
 #from matplotlib import figure, cm, ticker
@@ -43,10 +44,10 @@ def sendout(func, *args, **kwargs):
     '''Sends information to console or gui'''
     if conn == None:
         if func == 'put':
-            print args[0]
-        elif func <> 'put':
+            print(args[0])
+        elif func != 'put':
             pass
-    elif conn <> None:
+    elif conn is not None:
         if func == 'put':
             text = args[0]
             conn.display_msg(text)
@@ -69,15 +70,15 @@ def read_ascii(filename, output = 0):
             rRows, rCols = len(MyData), len(MyData[0])
             if rRows > nrows:
                 MyData = MyData[:nrows]
-                print WARNING_ROWS % (rRows, filename, nrows)
+                print(WARNING_ROWS % (rRows, filename, nrows))
             if rCols > ncols:
                 MyData = [row[:ncols] for row in MyData]
-                print WARNING_COLS & (rCols, filename, ncols)
+                print(WARNING_COLS & (rCols, filename, ncols))
             if rRows < nrows or rCols < ncols:
                 raise Exception
             return MyData
         except Exception:
-            print ERROR_HEADER % filename 
+            print(ERROR_HEADER % filename) 
 
     #tem q fazer um print do cabecalho com um %14string para ficar igual
     myfile = open(filename, "r")
@@ -112,7 +113,7 @@ def calc2dlists(list1, list2, func):
 def transpose(list1):
     '''Transpose a 2D list (list of lists)'''
     cols = len(list1[0])
-    newlist = [[x[y] for x in list1] for y in xrange(cols)]
+    newlist = [[x[y] for x in list1] for y in range(cols)]
     return newlist
 
 def sum2d(list2d):
@@ -138,7 +139,7 @@ def stvar(values, avg, std, nodata=None):
     for row in values:
         temp = []
         for value in row:
-            if value == nodata and nodata <> None:
+            if value == nodata and nodata is not None:
                 temp.append(nodata)
             else:
                 result = (value - avg) / std
@@ -181,7 +182,7 @@ def reducelist(lst):
 def check(test):
     '''Checks if all elements in a list are equal'''
     N = len(test)
-    result = min([test[x] == test[x+1] for x in xrange(N-1)])
+    result = min([test[x] == test[x+1] for x in range(N-1)])
     return result
 
 
@@ -233,8 +234,9 @@ class spatial_functions:
             temp = read_ascii(raster)
         elif type(raster) == list:
             temp = raster
-        self.nodata_list = [map(lambda x: x == self.nodata, line) for line in temp]
 
+        #self.nodata_list = [map(lambda x: x == self.nodata, line) for line in temp]
+        self.nodata_list = [[x==self.nodata for x in temp[i]] for i in range(len(temp))]
     def ExtractValues(self, indata, raster_values, order = None, APRatio = 1,
                       outdir = None):
         '''Extract values from the intersection of data points
@@ -243,14 +245,14 @@ class spatial_functions:
            rasters -  A dictionary of raster values 
            order   -  A list of rasters names to extract by order
            args    -  Absence/Presence ratio'''
-
+        
         if outdir == None:
             outdir = self.out_dir
-
+        
         rasters = raster_values.keys()
         if order:
             rasters = order
-
+        
         if self.nodata_list == None:
             self.create_nodata_list(raster_values[rasters[0]])
         
@@ -266,7 +268,7 @@ class spatial_functions:
         for raster in rasters:
             RasterValue = raster_values[raster]
             
-            if type(indata) <> list: 
+            if type(indata) is not list: 
                 text = "Reading values for raster \'%s\'" % (path.basename(raster))
                 sendout('put', text)
             
@@ -275,7 +277,7 @@ class spatial_functions:
             sendout('progress', counter, len(rasters), msg=raster)
             counter += 1
         MyVariables = [reducelist([variables[y][x] for y in range(len(rasters))]) for x in range(len(coordinates))]
-
+        
         if type(indata) == list:
             return MyVariables
         else:
@@ -295,7 +297,7 @@ class spatial_functions:
             myfile = open(indata, "r")
             contents = myfile.readlines()
             myfile.close()
-            data = map(lambda x: (map(float, x.split(';'))), contents[1:])
+            data = list(map(lambda x: (list(map(float, x.split(';')))), contents[1:]))
             
             ndata = len(data) #TODO Add 'no data to read' error
 
@@ -309,7 +311,7 @@ class spatial_functions:
                 coordinates.append((x, y))
                 if line[0] == 0: 
                     absence += 1
-                elif line[0] <> 1:
+                elif line[0] != 1:
                     abundance_data = True
 
             if absence == 0 and abundance_data == False:
@@ -363,31 +365,31 @@ class spatial_functions:
 
         def absences(coordinates):
             # Extracts a list of all raster pixels without presence
-            y = [n for n in xrange(self.nrows) for r in xrange(self.ncols)]
-            x = [x for x in xrange(self.ncols)] * self.nrows
-            allCoord = map(None, x, y)
+            y = [n for n in range(self.nrows) for r in range(self.ncols)]
+            x = [x for x in range(self.ncols)] * self.nrows
+            allCoord = list(zip(x,y)) #map(None, x, y)
             lastPresence = 0
             for presence in coordinates:
-                if presence <> lastPresence: #TODO May add a duplicate presence error!!!
+                if presence != lastPresence: #TODO May add a duplicate presence error!!!
                     allCoord.remove(presence)
                 lastPresence = presence
             return allCoord
-
+        
         testRaster = self.nodata_list
         absences = absences(coordinates)
-
+        
         if pa_number > len(absences):
             text = "Number of pseudo absences higher than available locations for absences!\n\
                     Limiting the number to the available locations..."
             sendout('put', text)            
             pa_number = len(absences)
-
+        
         a_data, a_coordinates, a_MyData = [], [], []
         
         p = 0
         while p < pa_number: 
             xy = self.choice(absences)
-            if testRaster[xy[1]][xy[0]] <> 1:
+            if testRaster[xy[1]][xy[0]] != 1:
                 a_coordinates.append(xy)
                 a_data.append([0, (((xy[0] * self.cellsize) + self.xllcorner) + (self.cellsize / 2)), 
                                 (((self.nrows - xy[1])* self.cellsize) + self.yllcorner) - (self.cellsize / 2)])
@@ -397,7 +399,7 @@ class spatial_functions:
             else:
                 continue
             sendout('progress', p+1, pa_number)
-
+        
         return a_data, a_coordinates, a_MyData
 
     def save_presences(self, data, outdir):
@@ -419,22 +421,22 @@ class spatial_functions:
             outname   - Name for the output ascii raster (adds the self.out_dir to the name)
             rasterdic - Dictionary of all rasters'''
 
-        FinalModel = [[0.0] * self.ncols for x in xrange(self.nrows)]
-
+        FinalModel = [[0.0] * self.ncols for x in range(self.nrows)]
+        
         rasters = rasterdic.keys()
         if order:
             rasters = order
         #Computes the final model map
 
-        for row in xrange(self.nrows):
-            for col in xrange(self.ncols):
+        for row in range(self.nrows):
+            for col in range(self.ncols):
                 self.Row, self.Col = row, col
                 dataArray = [rasterdic[raster][row][col] for raster in rasters]
                 if self.nodata_list[row][col] == 1:
                     FinalModel[row][col] = self.nodata
                 else:
                     FinalModel[row][col] = reducelist(func(dataArray))
-
+        
         if outname == None:
             return FinalModel
         else:
@@ -491,8 +493,8 @@ class spatial_functions:
                 f = lambda value, check: check == True and self.nodata or value
                 raster = [[f(v, c) for v,c in zip(x,y)] for x,y in zip(raster,ndlist)]
             return raster
-        except Exception, e:
-            print e
+        except (Exception) as e:
+            print(e)
 
 class subsets():
     from random import randint, choice, shuffle
@@ -537,7 +539,7 @@ class subsets():
 
     def repeatData(self, Percentage, Repetitions):
         '''Creates random repetitions of input Data and Variables'''
-        for i in xrange(Repetitions):
+        for i in range(Repetitions):
             self.random_data(Percentage)
             yield self.RndData, self.RndVariables, self.RndTestData, self.RndTestVariables
 
@@ -567,13 +569,13 @@ class subsets():
                 raise Exception("Small_bootstrap")
             value, valueTest = 0, 0
 
-            for bootstrap in xrange(Btstrps):
+            for bootstrap in range(Btstrps):
                 BdataTrain, BvariablesTrain, BdataTest, BvariablesTest = [], [],[], []
-                for item in xrange(BsizeTrain):
+                for item in range(BsizeTrain):
                     index = self.randint(0, NTrain-1)
                     BdataTrain.append(self.RndData[index])
                     BvariablesTrain.append(self.RndVariables[index])
-                for item in xrange(BsizeTest):
+                for item in range(BsizeTest):
                     index = self.randint(0, NTest-1)
                     BdataTest.append(self.RndTestData[index])
                     BvariablesTest.append(self.RndTestVariables[index])
@@ -588,7 +590,7 @@ class subsets():
                     #TODO not result in less of 4 points to test!)
                 yield BdataTrain, BvariablesTrain, BdataTest, BvariablesTest
 
-        except Exception, msg:
+        except (Exception) as msg:
             if str(msg) == "Small_bootstrap":
                 sendout('put', "Bootstrap sample to small! Increse bootstrap sample size.")
 
@@ -611,22 +613,22 @@ class subsets():
             self.RndVariables = [self.MyVariables[x] for x in sortList]
             self.RndCoordinates = [self.coordinates[x] for x in sortList]
 
-            for i in xrange(k):
+            for i in range(k):
                 trainData = self.RndData[:]
                 trainVariables = self.RndVariables[:]
                 if i < Extra:
-                    testData = [self.RndData[x+(Items*i)] for x in xrange(Items)]
-                    testVariables = [self.RndVariables[x+(Items*i)] for x in xrange(Items)]
+                    testData = [self.RndData[x+(Items*i)] for x in range(Items)]
+                    testVariables = [self.RndVariables[x+(Items*i)] for x in range(Items)]
                     trainData[Items*i:Items*(i+1)] = []
                     trainVariables[Items*i:Items*(i+1)] = []
                 elif i >= Extra:
-                    testData = [self.RndData[x+(NormalItems+(Items+1)*(i-Extra))] for x in xrange(Items+1)]
-                    testVariables = [self.RndVariables[x+(NormalItems+(Items+1)*(i-Extra))] for x in xrange(Items+1)]
+                    testData = [self.RndData[x+(NormalItems+(Items+1)*(i-Extra))] for x in range(Items+1)]
+                    testVariables = [self.RndVariables[x+(NormalItems+(Items+1)*(i-Extra))] for x in range(Items+1)]
                     trainData[NormalItems+(Items+1)*(i-Extra):NormalItems+(Items+1)*(1+i-Extra)] = []
                     trainVariables[NormalItems+(Items+1)*(i-Extra):NormalItems+(Items+1)*(1+i-Extra)] = []
                 yield trainData, trainVariables, testData, testVariables
 
-        except Exception, msg:
+        except (Exception) as msg:
             if str(msg) == "nfolds":
                 sendout('put', "Decrease the number of folds.")
 
@@ -649,12 +651,14 @@ class roc():
             points = []
             
             #Sort the real values by the predicted values
-            combined = map(lambda x,y: [x,y], real,pred)
-            combined.sort(lambda x,y:cmp(x[1],y[1]), reverse=True)
-
+            #combined = map(lambda x,y: [x,y], real,pred)
+            #combined.sort(lambda x,y:cmp(x[1],y[1]), reverse=True)
+            combined = list(zip(real,pred))
+            combined = sorted(combined, key=itemgetter(1), reverse=True)
+            
             temp = -1E400
             #For all available values
-            for i in xrange(len(combined)):
+            for i in range(len(combined)):
                 if combined[i][1] != temp and combined[i][1] <= 1:
                     points.append((FP,TP))
                     temp = combined[i][1]
@@ -665,18 +669,21 @@ class roc():
                 if len(combined) == 1:
                     points.append((FP,TP))
             points.append((FP,TP))
+
             self.points = points
             self.RocPoints = None
+            
 
-        except Exception, e:
+        except (Exception) as e:
             if str(e) == "zero_values":
                 #If there are only zeros or ones is not possible to compute the Roc and AUC (divide by zero) 
                 #One solution may be this exception handles this by giving a auc value of 1.
-                print "Error: Real values are only presences or absences. ROC cannot be computed."
+                print("Error: Real values are only presences or absences. ROC cannot be computed.")
 
     def roc(self):
         P,N = self.counter
         RocPoints = self.points[:]
+        
         #(1 - Specificity (FP/N), Sensivity (TP/P))
         RocPoints = [(x/N, y/P) for x,y in RocPoints]
         self.RocPoints = RocPoints
@@ -691,7 +698,7 @@ class roc():
 
     def auc(self, Points = None):
         '''Calculates AUC value.'''
-        if Points == None and self.RocPoints <> None:
+        if Points == None and self.RocPoints is not None:
             Points = self.RocPoints
         elif Points == None and self.RocPoints == None:
             self.roc()
@@ -714,8 +721,8 @@ class roc():
         self.precision_recall()
         aucROC = self.auc(self.RocPoints)
         aucPR = self.auc(self.PRPoints)
-        rocplot = zip(*self.RocPoints)
-        prplot = zip(*self.PRPoints)
+        rocplot = list(zip(*self.RocPoints))
+        prplot = list(zip(*self.PRPoints))
         return rocplot, prplot, aucROC, aucPR
 
 class profiler():
@@ -750,7 +757,7 @@ class profiler():
 
         # For each raster creates a temporary list for varsur and profile to append results
         profile = []
-        for value in xrange(r+1):
+        for value in range(r+1):
             #Creates the profile data with all values 0.0 except for raster
             temp = [0.0] * N
             temp[pos] = pvars[raster][value] 
@@ -768,11 +775,11 @@ class profiler():
 
         # For each raster creates a temporary list for varsur and profile to append results
         twowayprof = []
-        for row in xrange(r, -1, -1):
+        for row in range(r, -1, -1):
             temp = [0.0] * N
             temp[pos2] = pvars[raster2][row] 
             twowayprof.append([])
-            for col in xrange(r+1):
+            for col in range(r+1):
                 temp[pos1] = pvars[raster1][col] 
                 twowayprof[r-row].append(reducelist(func(temp)))
 
@@ -794,13 +801,13 @@ class profiler():
 
         # For each raster creates a temporary list for varsur and profile to append results
         varsur = []
-        for row in xrange(r, -1, -1):
+        for row in range(r, -1, -1):
             temp = [0.0] * N
             varsur.append([])
             for other in others:
                 temp[pos(other)] = pvars[other][row]
 
-            for col in xrange(r+1):
+            for col in range(r+1):
                 temp[pos(raster)] = pvars[raster][col]
                 varsur[r-row].append(reducelist(func(temp)))
 

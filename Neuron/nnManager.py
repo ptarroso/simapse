@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 
@@ -26,10 +26,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from os import path, mkdir, remove, listdir
 import threading
 
-import nnFuncs
-from nnEngine import NN, savenet, loadnet, sigm, dsigm
-from nnRecorder import recorder, htmlreport
-import nnGraphs
+from . import nnFuncs
+from . import nnGraphs
+from .nnEngine import NN, savenet, loadnet, sigm, dsigm
+from .nnRecorder import recorder, htmlreport
 
 
 ### SOME VARIABLES ###
@@ -143,12 +143,12 @@ class Manager():
         rasters, raster_values, rasterstats, header = self.read_rasters(dir_rasters, standard)
     
         self.conn.display_msg(READ_MSG)
-
+        
         # Initializes nnFuncs.spatial_functions with data from the first raster
         spfuncs = nnFuncs.spatial_functions(*header)
-
+        
         allData, allVariables, DataCoords = spfuncs.ExtractValues(file_data, raster_values, rasters, apratio, out_dir)
-
+        
         self.conn.abundvar = spfuncs.abundance
         self.totaldata = (allData, allVariables, DataCoords)
         self.testNumb = testNumb = int(len(allData) * (percentage / 100.00))
@@ -170,7 +170,7 @@ class Manager():
                 self.conn.display_msg(NPOINTS_MSG % (trainNumb, testNumb))
             self.conn.modify_button('normal','all')
 
-        except Exception, msg:
+        except (Exception) as msg:
             self.conn.display_msg(str(msg))
             self.conn.modify_button('normal', ['READ', 'HINT', 'METHOD', 'OPTION'])
         if standard:
@@ -207,8 +207,8 @@ class Manager():
                 stsfile = '%s/%s.sts' % (dir_rasters, raster)
                 rstats[raster] = nnFuncs.readstats(stsfile)
             elif standard == True:
-                temp_list = [value for x in temp_raster for value in x if value <> na]
-                N =  float(len(temp_list))
+                temp_list = [value for x in temp_raster for value in x if value != na]
+                N = float(len(temp_list))
                 avg = sum(temp_list) / N
                 std = (sum([(x - avg)**2 for x in temp_list]) / N)**0.5
                 rmax, rmin = max(temp_list), min(temp_list)
@@ -262,7 +262,7 @@ class Manager():
         #Add headers to logs
         result_log.addheader(rasters + ['Chosen_net', 'TrainError', 'TrainAuc', 'TestError', 'TestAUC'])
         headers_pd = nnFuncs.transpose(self.totaldata[1])
-        for r_index in xrange(ninputs):
+        for r_index in range(ninputs):
             raster = rasters[r_index]
             header = varprof.rvars[raster]
             profile_log.addheader(header, raster)
@@ -276,7 +276,7 @@ class Manager():
         ### Creates the network ###
         NeuralShape = []
         NeuralShape.append(ninputs)
-        if len(hiddenlyrs) <> 0:
+        if len(hiddenlyrs) != 0:
             for item in  hiddenlyrs.split(','): NeuralShape.append(int(item))
         NeuralShape.append(1) # One output only
 
@@ -309,14 +309,14 @@ class Manager():
         #Keeps track of the networks repetitions that did not achieve proposed AUC values
         self.failed = 0
         
-        for self.rep in xrange(1, repetitions + 1):
+        for self.rep in range(1, repetitions + 1):
             self.conn.display_msg(MODELNO_MSG % (self.rep))
 
             #show progress bar
             msg = COMPMODEL_MSG % (self.rep, repetitions, self.failed)
             self.conn.progress_bar(self.rep-1, repetitions, msg=msg)
 
-            targets, inputs, targetsTest, inputsTest = repmethod.next()
+            targets, inputs, targetsTest, inputsTest = next(repmethod)
             #Prepares the net with random weights and burnin
             net.rndWeights()
             if 'burnin' in kwargs:
@@ -354,11 +354,11 @@ class Manager():
                 self.conn.progress_bar(pcounter, ptotal, color='darkgreen')
                 deriv.append(nnFuncs.reducelist(net.pderiv(line)))
                 pcounter += 1
-
+            
             #Write data to log and calculate variable importance per repetition
             tderiv = nnFuncs.transpose(deriv)
             varimp = []
-            for r_index in xrange(ninputs):
+            for r_index in range(ninputs):
                 self.conn.progress_bar(pcounter, ptotal, color='darkgreen')
                 pderiv_log.write(tderiv[r_index], rasters[r_index], str(self.rep))
                 varimp.append(sum([x**2 for x in tderiv[r_index]]))
@@ -366,7 +366,7 @@ class Manager():
             result_log.write(varimp + details, name=str(self.rep))
             profile_log.write_levels(Profiles, str(self.rep))
             varsur_log.write_levels(VarSurfaces, str(self.rep))
-
+            
             #Save model
             file_model = '%s/Model_%s.txt' % (out_dir, self.rep)
             modelFiles.append(file_model)
@@ -420,7 +420,7 @@ class Manager():
         iterations = net.iterations
         net.iterations = 1
         self.conn.display_msg(BURNIN_MSG)
-        for i in xrange(burnin):
+        for i in range(burnin):
             net.trainnet(0)
         net.iterations = iterations
         return net
@@ -431,14 +431,14 @@ class Manager():
            iterations and AUC/error reports (when needed)'''
         values, nets = [], []
         calculateAUC = False
-        if auctrain <> None and auctest <> None: calculateAUC = True
+        if auctrain is not None and auctest is not None: calculateAUC = True
 
         if calculateAUC:
             # Get a plain list of real values for roc
             real = [x for line in targets for x in line]
             realTest =[x for line in targetsTest for x in line]
 
-        for i in xrange(iterreport):
+        for i in range(iterreport):
             net.loaddata(inputs, targets)
             net.trainnet(0)
 
@@ -551,19 +551,20 @@ class Manager():
         average, std = spfuncs.modelstats(self.modelFiles, out_dir)
         real = [x for line in self.totaldata[0] for x in line]
         pred = spfuncs.ExtractValues(self.totaldata[2], {'average':average})
-
+        
         if self.conn.abundvar:
             plotvalues = [real, pred]
         else:
             roc = nnFuncs.roc(real, pred)
             plotvalues = roc.process_all()
+            
         pcounter += 1
         # Show maps
         self.conn.progress_bar(pcounter, ptotal, msg=SHOWMAPS_MSG)
         Maps = nnGraphs.throwgraph(nnGraphs.MapsGraph, average, std, 
                                    "Results_map", out_dir, spfuncs.nodata)
         self.conn.processGraph(Maps)
-
+    
         Analysis = nnGraphs.throwgraph(nnGraphs.AnalysisGraph, 
                                        rlog.getavg()[:ninputs],
                                        plotvalues, "Results_variables_roc",
@@ -572,11 +573,10 @@ class Manager():
                                        corr=self.conn.abundvar)
         self.conn.processGraph(Analysis)
 
-
         self.conn.showResults(["Results_map.png","Results_variables_roc.png"])
         
         pcounter +=1
-
+        
         #Make html report
         kwargs['scheme'] = '%s,%s,%s' % (ninputs, kwargs['hiddenlyrs'], 1)
         kwargs['repetitions'] = repetitions
@@ -585,7 +585,7 @@ class Manager():
         report.model()
         report.variables(raster_names)
         report.write(out_dir + '/report.html')
-
+        
         self.conn.progress_bar(pcounter, ptotal)
         self.conn.modify_button('normal', 'all')
 
@@ -643,7 +643,7 @@ class Manager():
         ninputs = len(self.rasters)
         NeuralShape = []
         NeuralShape.append(ninputs)
-        if len(hiddenlyrs) <> 0:
+        if len(hiddenlyrs) != 0:
             for item in  hiddenlyrs.split(','): NeuralShape.append(int(item))
         NeuralShape.append(1) # One output only
 
@@ -672,7 +672,7 @@ class Manager():
                 repmethod = subsets.repeatData(percentage, repetitions)
                 samplingName = RAND_MSG
 
-            for item in xrange(repetitions):
+            for item in range(repetitions):
                 targets, inputs, ttest, itest = repmethod.next()
                 net.rndWeights()
                 initial_error = net.neterror(inputs, targets)[0]

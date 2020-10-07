@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 
@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from os import curdir
 
-from nnFuncs import transpose, read_ascii, sendout
+from .nnFuncs import transpose, read_ascii, sendout
 
 try:
     from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -59,7 +59,7 @@ def varsur2d(varsur, labels, varname = None, outdir = None, dpi = 300):
     Y = np.array(transpose([range(N)] * N))
     Z = varsur[:]
     Z.reverse()
-    im = plt.pcolor(X, Y, Z, cmap=cm.RdYlGn)
+    im = plt.pcolor(X, Y, Z, cmap=cm.RdYlGn, shading='auto')
     fig.colorbar(im)
     outfile = '%s/%s_varsurface.png' % (outdir, varname)
     fig.savefig(outfile, dpi= dpi)
@@ -172,7 +172,7 @@ def MapsGraph(plotgraph1, plotgraph2, name,
     canvas = FigureCanvasAgg(fig)
     averageplot = fig.add_subplot(121)
 
-    temp1 = [x for y in plotgraph1 for x in y if x <> nodata]
+    temp1 = [x for y in plotgraph1 for x in y if x != nodata]
     max_value = max(temp1)
     min_value = min(temp1)
 
@@ -185,7 +185,7 @@ def MapsGraph(plotgraph1, plotgraph2, name,
 
     #plots standard deviation model
 
-    temp2 = [x for y in plotgraph2 for x in y if x <> nodata]
+    temp2 = [x for y in plotgraph2 for x in y if x != nodata]
     max_value = max(temp2)
     min_value = min(temp2)
 
@@ -220,7 +220,7 @@ def AnalysisGraph(derivatives, plotvalues, name,
     dnames = None
     if 'dnames' in kwargs:
         dnames = kwargs['dnames']
-
+    
     position = range(len(derivatives))
     width = 0.9
     barplot = varBars.bar(position, derivatives, width,
@@ -230,12 +230,14 @@ def AnalysisGraph(derivatives, plotvalues, name,
     varBars.set_xticks([x + width/2 for x in position]) 
     varBars.set_xticklabels(dnames, rotation = 90, fontsize = 8)
     varBars.set_xlim(-width,len(position))
-
+    
     # Plots final Roc and precision/recall curve with
     # respective Aucs with the final averaged prediction map
     secondPlot = fig.add_subplot(122)
-    if corr: corrplot(secondPlot, plotvalues)
-    else: rocplot(secondPlot, plotvalues)
+    if corr: 
+        corrplot(secondPlot, plotvalues)
+    else: 
+        rocplot(secondPlot, plotvalues)
 
     fig.savefig(outdir + "/" + name + ".png", dpi= dpi)
     #fig.savefig(outdir + "/" + name + ".svg", dpi= 300)
@@ -243,7 +245,7 @@ def AnalysisGraph(derivatives, plotvalues, name,
     
     #Displays the exact value for each variable importance
     bar_labels = map(lambda x,y,z: "%s = %.4f (%.4f)" % (x,y,z), dnames, derivatives, dstd)
-    sendout('put', "\nSum of squared partial derivatives and standart deviation by variable")
+    sendout('put', "\nSum of squared partial derivatives and standard deviation by variable")
     for item in bar_labels:
         sendout('put', item)
 

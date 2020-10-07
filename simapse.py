@@ -1,7 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 

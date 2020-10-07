@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 
@@ -61,8 +61,8 @@ class NN():
         if verbose == None:
             verbose = self.verbosity
 
-        for i in xrange(0, self.iterations):
-            for p in xrange(0, self.Patterns):
+        for i in range(0, self.iterations):
+            for p in range(0, self.Patterns):
                 self.currentPat = p
 
                 #calculate the current network output
@@ -76,7 +76,7 @@ class NN():
             #error for this iteration
             if verbose == 1:
                 self.neterror(self.trainInputs, self.trainOutputs, 'SSerror')
-                print "iteration = %s | RMS error = %s" % (i, self.GlobalError)
+                print("iteration = {} | RMS error = {}".format(i, self.GlobalError))
 
     def loaddata(self, inputs, targets):
         #Le os dados para o treino
@@ -94,15 +94,15 @@ class NN():
 
         #variable average
         average = [0.0] * nvar
-        for i in xrange(n):
-            average = [average[x] + inputs[i][x] for x in xrange(nvar)]
-        average = [average[x] / n for x in xrange(nvar)]
+        for i in range(n):
+            average = [average[x] + inputs[i][x] for x in range(nvar)]
+        average = [average[x] / n for x in range(nvar)]
 
         #variable standard deviation
         stdev = [0.0] * nvar
-        for i in xrange(n):
-            stdev = [stdev[x] + (inputs[i][x] - average[x])**2 for x in xrange(nvar)]
-        stdev = [stdev[x] / n for x in xrange(nvar)]
+        for i in range(n):
+            stdev = [stdev[x] + (inputs[i][x] - average[x])**2 for x in range(nvar)]
+        stdev = [stdev[x] / n for x in range(nvar)]
 
         #Assign self variables
         self.average = average
@@ -124,13 +124,13 @@ class NN():
         self.trainInputs = inputs
         nInputs = self.Patterns = len(inputs)
         finalresults = []
-        for p in xrange(nInputs):
+        for p in range(nInputs):
             self.currentPat = p
             self.feedforward()
             result = self.values[-1][:]
             finalresults.append(result) 
             if verbose == 1:
-                print "Pattern = %s | %s | predicted = %s" % (p+1,self.trainOutputs[p], result)
+                print("Pattern = {} | {} | predicted = {}".format(p+1,self.trainOutputs[p], result))
 
         return finalresults
 
@@ -143,7 +143,7 @@ class NN():
             if errorType not in ['RMSerror', 'SSerror']:
                 raise SyntaxError('Error type must be \'RMSerror\' or \'SSerror\'!')
 
-            if inputs <> None and targets <> None:
+            if inputs is not None and targets is not None:
                 self.loaddata(inputs, targets)
 
             if errorType == 'RMSerror':
@@ -154,29 +154,29 @@ class NN():
             error = self.GlobalError
             return error
 
-        except SyntaxError, e:
-            print e
+        except (SyntaxError) as e:
+            print(e)
 
     def __RMSerror(self):
         '''Calculates the Root Mean Square Error os the network.'''
         nOutputs = self.scheme[-1]
         temp = [0.0] * nOutputs
-        for p in xrange(self.Patterns):
+        for p in range(self.Patterns):
             self.currentPat = p #NAO ESQUECER QUE E APENAS UM INDICE DA LISTA
             self.feedforward()
-            temp = [temp[x] + (self.errPat[x])**2 for x in xrange(nOutputs)]
-        RMSerror = [(temp[x] / self.Patterns)**0.5 for x in xrange(nOutputs)]
+            temp = [temp[x] + (self.errPat[x])**2 for x in range(nOutputs)]
+        RMSerror = [(temp[x] / self.Patterns)**0.5 for x in range(nOutputs)]
         self.GlobalError = RMSerror
 
     def __SSerror(self):
         '''Calculates the Sum of Squared Errors of the network.'''
         nOutputs = self.scheme[-1]
         temp = [0.0] * nOutputs
-        for p in xrange(self.Patterns):
+        for p in range(self.Patterns):
             self.currentPat = p #NAO ESQUECER QUE E APENAS UM INDICE DA LISTA
             self.feedforward()
-            temp = [temp[x] + (self.errPat[x])**2 for x in xrange(nOutputs)]
-        SSerror = [0.5 * (temp[x]) for x in xrange(nOutputs)]
+            temp = [temp[x] + (self.errPat[x])**2 for x in range(nOutputs)]
+        SSerror = [0.5 * (temp[x]) for x in range(nOutputs)]
         self.GlobalError = SSerror        
 
     def backpropag(self):
@@ -191,15 +191,15 @@ class NN():
         values = self.values
         changes = self.changes
         tInputs = self.trainInputs[curPat][:]
-        out_errors = self.errPat[:]                     # Erros da layer seguinte - comeca pelos erros de output
+        out_errors = self.errPat[:]           # Erros da layer seguinte - comeca pelos erros de output
 
         #Para o output
-        errors = [0.0] * (scheme[-2] + 1)                       #Erros para a ultima hidden layer com BIAS
-        for n in xrange(scheme[-1]):                                 #Para cada neuronio de output
+        errors = [0.0] * (scheme[-2] + 1)     #Erros para a ultima hidden layer com BIAS
+        for n in range(scheme[-1]):           #Para cada neuronio de output
             change = 0.0
             derivative = dfunc(values[-1][n])
             delta = derivative * out_errors[n]        #TODO o feedforward armazena a derivativa em self.derivatives! Posso utilizar aqui?
-            for w in xrange(scheme[-2]):                        #Para cada weight associado ao neuronio (SEM BIAS)
+            for w in range(scheme[-2]):       #Para cada weight associado ao neuronio (SEM BIAS)
                 errors[w] += weights[-1][n][w] * out_errors[n]  #Calculo do erro para a ultima hidden layer
                 change = LR * delta * values[-2][w] + M * changes[-1][n][w]
                 weights[-1][n][w] = weights[-1][n][w] - change
@@ -209,13 +209,13 @@ class NN():
             weights[-1][n][-1] = weights[-1][n][-1] - change
             
         #Para as hidden layers
-        for l in xrange(nlayers - 2, 1, -1):                     #Para todas as hidden layers (sem output e sem a priemira com ligacao aos inputs)
+        for l in range(nlayers - 2, 1, -1):                     #Para todas as hidden layers (sem output e sem a priemira com ligacao aos inputs)
             prevL_errors = [0.0] * (scheme[l-1] + 1)        #erros para a previous layer (next layer in the reversed sequence) + 1 para BIAS
-            for n in xrange(scheme[l]):                    #Para todos os neuronios da layer l
+            for n in range(scheme[l]):                    #Para todos os neuronios da layer l
                 change = 0.0
                 derivative = dfunc(values[l-1][n]) # -1 porque a values nao tem inputs
                 delta = derivative * errors[n] 
-                for w in xrange(scheme[l-1]):         #Para todos os weights do neuronio n da layer l SEM BIAS (igual ao numero de neuronios da layer anterior)
+                for w in range(scheme[l-1]):         #Para todos os weights do neuronio n da layer l SEM BIAS (igual ao numero de neuronios da layer anterior)
                     prevL_errors[w] += weights[l-1][n][w] * errors[n]
                     change = LR * delta * values[l-2][w] + M * changes[l-1][n][w]
                     weights[l-1][n][w] = weights[l-1][n][w] - change
@@ -226,11 +226,11 @@ class NN():
             errors = prevL_errors[:]                            #Copia os erros para a seuqencia seguinte
 
         # Para a primeira hidden layer
-        for n in xrange(scheme[1]):                             #Neuronios da primeira hidden layer
+        for n in range(scheme[1]):                             #Neuronios da primeira hidden layer
             change = 0.0
             derivative = dfunc(values[0][n])
             delta = derivative * errors[n]
-            for w in xrange(scheme[0]):                         #Numero de inputs (sem o bias)
+            for w in range(scheme[0]):                         #Numero de inputs (sem o bias)
                 change = LR * delta * tInputs[w] + M * changes[0][n][w]
                 weights[0][n][w] = weights[0][n][w] - change
                 changes[0][n][w] = change
@@ -255,19 +255,19 @@ class NN():
 
         #FEEDFORWARD
         # Para os inputs - 1a hidden layer
-        for n in xrange(scheme[1]):      #Para cada neuronio da primeira layer
+        for n in range(scheme[1]):      #Para cada neuronio da primeira layer
             hValues[0][n] = 0.0         #Reset aos valores para o somatorio
-            for w in xrange(scheme[0]): #Para cada weight da primeira layer sem o BIAS
+            for w in range(scheme[0]): #Para cada weight da primeira layer sem o BIAS
                 hValues[0][n] += tInputs[w] * weights[0][n][w]
             hValues[0][n] += weights[0][n][-1]          # Soma o weight do BIAS
             hValues[0][n] = func(hValues[0][n])
             derivatives[0][n] = dfunc(hValues[0][n])
         
         # Para as hidden layers
-        for l in xrange(1, nlayers):      #Para todas as hidden layers e output
-            for n in xrange(scheme[l+1]): #Para todos os neuronios da hLayer l (+1 devido ao input)
+        for l in range(1, nlayers):      #Para todas as hidden layers e output
+            for n in range(scheme[l+1]): #Para todos os neuronios da hLayer l (+1 devido ao input)
                 hValues[l][n] = 0.0     #Resete do valor do neuronio para o somatorio
-                for w in xrange(scheme[l]): #Para todos os weights menos BIAS
+                for w in range(scheme[l]): #Para todos os weights menos BIAS
                     hValues[l][n] += hValues[l-1][w] * weights[l][n][w]
                 hValues[l][n] += weights[l][n][-1]
                 hValues[l][n] = func(hValues[l][n])
@@ -284,7 +284,7 @@ class NN():
         curPat = self.currentPat
         hValues = self.values
         nOutputs = self.scheme[-1]
-        errPat = [hValues[-1][o] - self.trainOutputs[curPat][o]for o in xrange(nOutputs)]
+        errPat = [hValues[-1][o] - self.trainOutputs[curPat][o]for o in range(nOutputs)]
         # nao deve ser preciso a atribuicao depois
         self.errPat = errPat
 
@@ -298,7 +298,7 @@ class NN():
         elif len(inputs) == self.scheme[0] and type(inputs[0]) is float:
             pderiv = self.__pderiv(inputs)
         elif len(inputs) < 1 or type(inputs[0]) is not list:
-            print "Inputs must be [[i1],[i2],[i3],...] or [inputs]"
+            print("Inputs must be [[i1],[i2],[i3],...] or [inputs]")
         return pderiv
 
     def _weight_gen(self, layer, rep = 1, remove_bias = True):
@@ -310,9 +310,9 @@ class NN():
         weights = self.weights
         new_weights = []
         w = weights[layer]
-        for r in xrange(rep):
-            for n_previous in xrange(len(w[0]) - bias):
-                for n_next in xrange(len(w)):
+        for r in range(rep):
+            for n_previous in range(len(w[0]) - bias):
+                for n_next in range(len(w)):
                     new_weights.append(w[n_next][n_previous])
         return new_weights
 
@@ -330,21 +330,21 @@ class NN():
         nlayers = len(scheme)
         noutputs = scheme[-1]
 
-        pderiv = [[0.0 for y in xrange(len(inputs))] for x in xrange(len(deriv[-1]))]
-        for i in xrange(len(inputs)):
+        pderiv = [[0.0 for y in range(len(inputs))] for x in range(len(deriv[-1]))]
+        for i in range(len(inputs)):
             # variable product has all the weights connected to input node i
-            product = [weights[0][x][i] for x in xrange(len(weights[0]))]
+            product = [weights[0][x][i] for x in range(len(weights[0]))]
 
-            for l in xrange(nlayers-1): # output layer removed
+            for l in range(nlayers-1): # output layer removed
                 # n is the number of connections available to between current layers
                 # m is number of nodes with derivatives in layer l
                 n, m = len(product), len(deriv[l])
                 # each deriv node value for layer l is repeated 
                 # by the number of connections it has (the same as the number of 
                 # neurons of previous layer)
-                new_deriv = deriv[l] * (n / m)
+                new_deriv = deriv[l] * int(n / m)
                 # the products are multiplied by the derivatives sequentially
-                product = [product[x] * new_deriv[x] for x in xrange(n)]
+                product = [product[x] * new_deriv[x] for x in range(n)]
                 # w has all the weights from next layer sorted by the neurons of
                 # the previous layer and repeated for the number of connections
                 # of the current calculation
@@ -354,14 +354,14 @@ class NN():
                 sprawl_product = repeat(product, len(deriv[l+1]))
                 # sprawled product is multiplied by the sequence of weights between
                 # current and next layer
-                product = [sprawl_product[x] * w[x] for x in xrange(len(sprawl_product))]
+                product = [sprawl_product[x] * w[x] for x in range(len(sprawl_product))]
 
             n, m = len(product), len(deriv[-1])
-            new_deriv = deriv[-1] * (n / m)
-            product = [product[x] * new_deriv[x] for x in xrange(n)]
+            new_deriv = deriv[-1] * int(n / m)
+            product = [product[x] * new_deriv[x] for x in range(n)]
 
-            for o in xrange(noutputs):
-                for x in xrange(0, n, noutputs):
+            for o in range(noutputs):
+                for x in range(0, n, noutputs):
                     pderiv[o][i] += product[x+o]
         return pderiv
 
@@ -383,9 +383,9 @@ class NN():
         nlayers = len(scheme)
         noutputs = scheme[-1]
         pderiv = []
-        for i in xrange(len(inputs)):
+        for i in range(len(inputs)):
             value = 0
-            for ni in xrange(scheme[0]):
+            for ni in range(scheme[0]):
                 #weights e layer 0 que tem weights entre inputs e 1a hidden
                 #e layer 1 que tem entre 1a hidden e output
                 #pderiv e a layer 0, que corresponde aos  neuronios
@@ -408,14 +408,14 @@ class NN():
             nlayers = len(network)
             values, derivatives, weights, changes = [], [], [], []
 
-            for layer in xrange(1, nlayers):
+            for layer in range(1, nlayers):
                 values.append([])
                 derivatives.append([])
                 weights.append ([])
                 changes.append([])
                 nneurons, p_nneurons = network[layer], network[layer-1]+1 # +1 para o BIAS nos weights
                 i = layer-1
-                for neuron in xrange(nneurons):
+                for neuron in range(nneurons):
                     values[i].append(0.0)
                     derivatives[i].append(0.0)
                     weights[i].append([0.0]* (p_nneurons ))
@@ -426,14 +426,14 @@ class NN():
             self.weights = weights
             self.changes = changes
 
-        except SyntaxError, e:
-            print e
+        except (SyntaxError) as e:
+            print(e)
 
     def rndWeights(self):
         #Inicializa todos os weights com numeros aleatorios entre [-0.5, 0.5]
         w = self.weights
-        for l in xrange(len(w)):
-            for n in xrange(len(w[l])):
+        for l in range(len(w)):
+            for n in range(len(w[l])):
                 w[l][n] = [(random() - 0.5) for x in w[l][n]]
         self.weights = w
 
@@ -441,20 +441,20 @@ class NN():
         #Fazer um data loader com calculo automatico do self.pattern
         # o __init__ corre logo esta funcao
         #TODO O numero de patterns tem de ser igual ao numero de outputs
-        print "Loading XOR example...\n"
+        print("Loading XOR example...\n")
         Inputs = [[1, 0], [0, 1], [1, 1], [0, 0]]
         Targets = [[1.0], [1.0], [0.0], [0.0]]
         self.loaddata(Inputs, Targets)
         self.rndWeights()
         self.trainnet(verbose = 1)
 
-        for p in xrange(0, self.Patterns):
+        for p in range(0, self.Patterns):
             self.currentPat = p #NAO ESQUECER QUE E APENAS UM INDICE DA LISTA
             self.feedforward()
-            print "Pattern = %s | real = %s | predicted = %s" % (p+1, self.trainOutputs[p], self.values[-1])
+            print("Pattern = {} | real = {} | predicted = {}".format(p+1, self.trainOutputs[p], self.values[-1]))
         derivs = self.pderiv(Inputs)
-        for i in xrange(len(Inputs)):
-            print 'Input: %s | Partial derivative: %s' % (Inputs[i], derivs[i])
+        for i in range(len(Inputs)):
+            print('Input: {} | Partial derivative: {}'.format(Inputs[i], derivs[i]))
 
 def repeat(lst, rep):
     '''Creates a new list where each item is repeated 'rep'
@@ -462,7 +462,7 @@ def repeat(lst, rep):
        repeat([1,2,3], 2) = [1,1,2,2,3,3]'''
     new_lst = []
     for item in lst:
-        for r in xrange(rep):
+        for r in range(rep):
             new_lst.append(item)
     return new_lst
 

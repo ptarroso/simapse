@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00 beta
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 
@@ -22,9 +22,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-import Connector
-
-import MainCL
+from . import Connector
+from . import MainCL
 
 __author__ = "Pedro Tarroso"
 __copyright__ = "2012, Pedro Tarroso"
@@ -39,7 +38,7 @@ conn = Connector.connection()
 
 #Check if there are arguments (Command line or GUI)
 if MainCL.startGUI:
-    import MainGUI
+    from . import MainGUI
     GUI = MainGUI.EMNN(conn)
     GUI.startgui()
 else:

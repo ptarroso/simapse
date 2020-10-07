@@ -23,16 +23,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-from tkFileDialog import askopenfilename, askdirectory
-from Tkinter import Tk, Toplevel, Label
-import Queue
+from tkinter import Tk, Toplevel, Label, filedialog
+import queue as qu
 import threading
-import Connector
+from math import ceil
+from . import Connector
 
 class EMNN():
     def __init__(self, conn):
         conn.gui = True
-        queue = self.queue = Queue.Queue()
+        queue = self.queue = qu.Queue()
         conn.queue = queue
         self.conn = conn
    
@@ -48,7 +48,7 @@ class EMNN():
         root.mainloop()
 
     def gui(self):
-        from Tkinter import Button, Entry, Frame, Label, Checkbutton, \
+        from tkinter import Button, Entry, Frame, Label, Checkbutton, \
                             Scrollbar, Text, IntVar, StringVar, OptionMenu
 
         self.dir_project = ''
@@ -218,9 +218,9 @@ class EMNN():
 
     def displayMethodFrame(self, method):
         ''' Displays individual frames for the subsetting method'''
-        from Tkinter import Button, Entry, Frame, Label
+        from tkinter import Button, Entry, Frame, Label
 
-        if self.__dict__.has_key('frameMethodSelection'): self.frameMethodSelection.destroy()
+        if 'frameMethodSelection' in self.__dict__: self.frameMethodSelection.destroy()
 
         self.varupdate()
         c = self.conn.simargs
@@ -302,9 +302,9 @@ class EMNN():
 
     def displayOptionFrame(self, option):
         ''' Displays individual frames for the subsetting method'''
-        from Tkinter import Button, Entry, Frame, Label, Checkbutton
+        from tkinter import Button, Entry, Frame, Label, Checkbutton
 
-        if self.__dict__.has_key('frameOptionSelection'): self.frameOptionSelection.destroy()
+        if 'frameOptionSelection' in self.__dict__: self.frameOptionSelection.destroy()
 
         self.varupdate()
         c = self.conn.simargs
@@ -556,7 +556,7 @@ class EMNN():
 
     def project(self):
         self.varupdate()
-        project_dir = askdirectory()
+        project_dir = filedialog.askdirectory()
         self.conn.simargs['project_dir'] = project_dir
         self.conn.processor(self.conn.manager.project, 'project')
 
@@ -566,17 +566,17 @@ class EMNN():
 
     def dataOpen(self):
         self.entData.delete(0, 'end')
-        file_data = askopenfilename(filetypes=[("text files","*.txt"), ("allfiles","*")])
+        file_data = filedialog.askopenfilename(filetypes=[("text files","*.txt"), ("allfiles","*")])
         self.entData.insert('end', file_data)
         
     def rasterOpen(self):
         self.entRasterFolder.delete(0, 'end')
-        dir_rasters = askdirectory()
+        dir_rasters = filedialog.askdirectory()
         self.entRasterFolder.insert('end', dir_rasters)
         
     def outOpen(self):
         self.entOutFolder.delete(0,'end')
-        out_dir = askdirectory()
+        out_dir = filedialog.askdirectory()
         self.entOutFolder.insert('end', out_dir)
         
     def update_text(self, string_txt):
@@ -608,7 +608,7 @@ class EMNN():
                     self.update_text('Unknown message...')
                 self.queue.task_done()
                 self.root.update()
-        except Queue.Empty:
+        except qu.Empty:
             pass
         self.root.after(100, self.periodicUpdate)
 
@@ -639,11 +639,11 @@ class EMNN():
             msg      - message to display'''
         color = 'blue'
         if 'color' in kwargs: color = kwargs['color']
-        percent = (value * 100) / maxvalue
+        percent = ceil((value * 100) / maxvalue)
         self.Progress_bar.configure(font = self.smalltext,
                                     foreground="white",
                                     background=color) #"#0000ff"
-        if percent <> 100:
+        if percent != 100:
             width = int((percent / 100.000) * 20)
             text = '%s%%' % percent
             self.Progress_bar.configure(text = text, width = width)
@@ -657,7 +657,7 @@ class EMNN():
             self.Progress_info.configure(text="")
 
     def showResults(self, figures):
-        from Tkinter import Button
+        from tkinter import Button
         figures = [self.entOutFolder.get() + "/" + x for x in figures]
         ResultsWindow = mytoplevel(self.root, figures, self)
         ResultsWindow.title('Results')
@@ -683,7 +683,7 @@ class mytoplevel(Toplevel):
             for image in self.images:
                 self.image_label = Label(self, image=image)
                 self.image_label.pack()
-        except ImportError, e:
+        except (ImportError) as e:
             msg = "Probably you don't have the PIL module but all the data is saved on the output folder. Try again after installing the Python module."
             gui.textFrame.insert('end', msg)
             gui.textFrame.yview('end')

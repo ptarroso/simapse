@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00 beta
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 
@@ -28,8 +28,8 @@ import random
 import threading
 import os.path as path
 
-from nnRecorder import logger
-import nnManager
+from .nnRecorder import logger
+from . import nnManager
 
 # CODE VARS
 CODE_TEXT          = 'message'
@@ -153,7 +153,7 @@ class connection(simargs):
         ''' A wrapper for the manager.model '''
         try:
             target(**varsdic)
-        except Exception,e:
+        except (Exception) as e:
             self.LOG.error(e)
-            print 'error:', e
+            print('error:', e)
 

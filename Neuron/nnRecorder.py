@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''
 SIMAPSE - simulation maps for ecological niche modelling
-Version 1.01 beta
+Version 2.00 beta
 Copyright (C) 2010  Pedro Tarroso
 
 Please cite: 
@@ -28,7 +28,7 @@ from datetime import date
 import logging
 import logging.handlers as handlers
 
-from nnFuncs import calc2dlists
+from .nnFuncs import calc2dlists
 
 class recorder():
     '''Just a simple I/O manager to save and recall results files.
@@ -54,7 +54,7 @@ class recorder():
         mode = 'w'
         if append: mode = 'a'
         #Just creates the empty file or deletes the old one
-        if levels <> None:
+        if levels is not None:
             recfile = outdir + '%s' + '_' + fileend + '.txt'
             for level in levels:
                 newfile = open(recfile % level, mode)
@@ -70,7 +70,7 @@ class recorder():
         '''Adds one line header to the file.'''
         txt = self.sep.join([str(x) for x in values])
         txt = headertxt + self.sep + txt
-        if level <> None:
+        if level is not None:
             filename = self.file % level
         else:
             filename = self.file
@@ -107,7 +107,7 @@ class recorder():
                 if name not in self.names + self.memfuncs:
                     self.names.append(name)
                 txt = self.prename + str(name) + self.sep + txt
-            if level <> None:
+            if level is not None:
                 filename = self.file % level
             else:
                 filename = self.file
@@ -340,7 +340,7 @@ class html():
         '''Exports the project to a file.'''
         if self.htmldoc == True:
             self.endhtml()
-        if filename[-5:] <> '.html':
+        if filename[-5:] is not '.html':
             filename += '.html'
         htmlfile = open(filename, 'w')
         for line in self.html:
@@ -355,7 +355,7 @@ class html():
                     self.paragraph()
                 html = '<table border=\"%s\" cellpadding=\"%s\" cellspacing=\"%s\">\n<tbody>\n' % (border, padding, spacing)
                 self.html += html
-                self.virtualtable = [[None for y in xrange(cols)]for x in xrange(rows)]
+                self.virtualtable = [[None for y in range(cols)]for x in range(rows)]
                 self.htmltable = True
 
     def closetable(self):
@@ -484,10 +484,10 @@ class htmlreport(html):
         '''Automaticaly adds tables with the variables and links to data.'''
         nvars = len(variables)
         ncols = 3 #only 3 plots per line
-        nrows = nvars / ncols
-        if nvars % ncols <> 0:
+        nrows = int(nvars / ncols)
+        
+        if nvars % ncols != 0:
             nrows += 1
-
         self.chapter('Variables results')
         self.paragraph()
         text = 'The SIMAPSE produce variable plots to infer the behaviour of each variable in the final model. All values are averaged from the models that were successfully built.'
@@ -517,11 +517,10 @@ class htmlreport(html):
         clstb = self.closetable
         cell  = self.cell
         nvars = len(variables)
-        
         newtb(nrows,ncols)
-        for i in xrange(nvars):
-            row = (i / 3 ) + 1
-            col = (i - (3 * row)) + 1
+        for i in range(nvars):
+            row = int((i / 3 ) + 1)
+            col = int((i - (3 * row)) + 1)
             varname = variables[i]
             txt = '%s%s%s' % (text(varname + ' - ' + href('%s_%s.txt' % (varname, vartype), 'Data file')), 
                               image('%s_%s.png' % (varname, vartype), True, 300),
