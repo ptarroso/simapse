@@ -45,6 +45,7 @@ xllcorner   |-8.0
 yllcorner   |34.0
 cellsize    |1000
 NODATA_value|-9999
+
 1 |2 |3 |4
 5 |6 |7 |8
 9 |10|11|12
