@@ -38,7 +38,8 @@ The first column has the observational data and might be:
 
 The raster data follows the plain text ASCII grid format. It consists of a 6 line header and a matrix-like disposition of pixel values.
 
-|-----------|-----
+            |
+------------|----
 ncols       |4
 nrows       |5
 xllcorner   |-8.0
