@@ -340,7 +340,7 @@ class html():
         '''Exports the project to a file.'''
         if self.htmldoc == True:
             self.endhtml()
-        if filename[-5:] is not '.html':
+        if filename[-5:] != '.html':
             filename += '.html'
         htmlfile = open(filename, 'w')
         for line in self.html:
